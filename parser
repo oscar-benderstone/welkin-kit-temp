@@ -1,0 +1,130 @@
+#!/usr/bin/env perl
+use strict;
+use warnings;
+use feature 'unicode_strings';
+use Encode;
+
+use Marpa::R2;
+use Data::Dumper;
+use Data::Dump;
+
+my $syntax = << 'SYNTAX';
+:default ::= action => ::array
+lexeme default = latm => 1
+
+expressions ::= expression*
+expression ::= declaration 
+
+declaration ::= <atomic declaration>
+  | 'layer' opt_identifier layer
+  | 'list' opt_identifier list
+  | 'tuple' opt_identifier tuple
+
+<atomic declaration> ::=
+   'num' opt_identifier num
+  | 'string' opt_identifier string
+  | 'unit' opt_identifier identifier
+  | 'operator' identifier
+
+term ::= 
+  layer
+  | operation
+  | tuple
+  | atom
+layer ::= '{' expressions '}'
+operation ::= identifier tuple
+  | term identifier term
+  | tuple identifier
+list ::= '[' term_row ']' 
+tuple ::= '(' term_row ')'
+term_row ::= term_seq term
+term_seq ::= many_term_seq
+term_seq ::=
+many_term_seq ::= comma_term*
+comma_term ::= term ','
+
+atom ::= 
+  num
+  | string
+  | identifier
+
+opt_identifier ::= identifier
+opt_identifier ::= 
+
+#Numbers
+num ::= opt_sign int trail
+trail ::= decimal | sci
+trail ::=
+decimal ::= '.' int
+sci ::= sci_start opt_sign int
+opt_sign ::= sign
+opt_sign ::=
+
+#Strings
+string ::= '"' string_contents '"'
+  | [']  string_contents [']
+string_contents ::= quoted_char*
+quoted_char ::= char
+  | slash '"'
+  | slash [']
+#quote ~ '"' | [']
+
+#Lexemes
+sign ~ '+' | '-'
+sci_start ~ 'e' | 'E'
+int ~ [\p{N}]*
+slash ~ [\\]
+char ~ [^"\\]+
+identifier ~ [^\W]*
+
+:discard ~ whitespace
+whitespace ~ [\s]*
+
+:discard ~ <line comment>
+<line comment> ~ '//' <comment>
+<comment> ~ <comment_char>*
+<comment_char> ~ [^\n]
+
+:discard ~ <multiline comment>
+<multiline comment> ~ '/*' <comment interior> '*/'
+<comment interior> ~
+    <optional non stars>
+    <optional star prefixed segments>
+    <optional pre final stars>
+<optional non stars> ~ [^*]*
+<optional star prefixed segments> ~ <star prefixed segment>*
+<star prefixed segment> ~ <stars> [^/*] <optional star free text>
+<stars> ~ [*]+
+<optional star free text> ~ [^*] 
+<optional pre final stars> ~ [*]*
+
+SYNTAX
+
+my $grammar = Marpa::R2::Scanless::G->new({source => \$syntax});
+my $recce = Marpa::R2::Scanless::R->new({
+    grammar => $grammar,
+    semantics_package => 'main' });
+
+my $input = decode_utf8 <<INPUT;
+
+layer Tod {
+
+  string name "Tod"
+
+  string height "6 ft"
+
+}
+
+
+INPUT
+
+print "Attempting to parse: ", $input, "\n";
+
+# Useful for debugging
+eval {$recce -> read(\$input)};
+
+print "\n", $recce->show_progress(0,-1);
+
+my $result = $grammar->parse(\$input, 'main');
+
+print Data::Dump::dump($$result), "\n" if $result;
