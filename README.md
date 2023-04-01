@@ -1,11 +1,12 @@
-# Welkin-Kit
+# Welkin-Kit-Temp
+
+**Update April 1, 2023 (NOT in relation to April Fool's Day):** I am using a different build tool for welkin-kit and am archiving this git repository. Feel free to reference it, but I will be creating a finalized repository with the correct build tool. Please see https://logsofhumanisticlogic.wordpress.com/ for further updates; they should be regularly posted starting April 9 (or sooner).
 
 
-/* Currently this software is at version 0.0.1 and is in constant development. This software is not yet ready for daily use;
-expect many breaking changes.
+*Currently this software is at version 0.0.1 and is in constant development. This software is not yet ready for daily use;
+expect many breaking changes.*
 
-This document, and all others, are still early drafts.
-*/
+*This document, and all others, are still early drafts.*
 
 Welcome to Welkin, a handy metalanguage for storing knowledge! This kit provides a handy set of tools to analyze Welkin files.
   For a philosophical justification of Welkin as a general-purpose knowledge metalanguage, see explanation.md.
